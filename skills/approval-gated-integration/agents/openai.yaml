@@ -1,0 +1,7 @@
+interface:
+  display_name: "Approval-Gated Integration"
+  short_description: "Implement changes through approved, verified steps"
+  default_prompt: "Use $approval-gated-integration to guide this codebase change step by step and wait for approval before each implementation stage."
+
+policy:
+  allow_implicit_invocation: true
