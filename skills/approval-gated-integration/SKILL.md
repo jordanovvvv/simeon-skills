@@ -23,12 +23,22 @@ Do not request approval for read-only inspection, analysis, or validation within
 
 Do not require approval for every individual file edit inside an approved step. Approval applies to the described behavioral scope.
 
+## Progress tracking
+
+Maintain a progress ledger from the first proposal through completion. Give every step a stable ID and record its scope, status, validation, and result. Use these statuses consistently: `proposed`, `approved`, `in_progress`, `completed`, `blocked`, and `skipped`.
+
+- Use the task's built-in plan or checklist as the default ledger when one is available.
+- Update the ledger when proposing or revising a step, receiving approval, starting implementation, and completing validation.
+- If work must survive across tasks or sessions, reuse the repository's established issue, pull request, or planning artifact. If none exists, propose a durable location and get approval before creating or modifying it.
+- Do not add an ad hoc tracking file to the repository by default.
+- When resuming interrupted work, reconcile the ledger with the codebase and latest validation evidence before continuing. Do not treat an unrecorded step as approved.
+
 ## Working loop
 
 Repeat this loop until the objective is complete:
 
-1. Inspect the current implementation and relevant tests.
-2. Describe the next proposed step:
+1. Inspect the current implementation and relevant tests, then reconcile the progress ledger.
+2. Add or update the next `proposed` step in the ledger and describe it:
    - objective;
    - behavioral changes;
    - files or modules likely affected;
@@ -37,10 +47,10 @@ Repeat this loop until the objective is complete:
    - important tradeoffs.
 3. Separate required work from optional suggestions.
 4. Yield to the user and request explicit approval.
-5. When approved, mark the step in progress.
+5. When approved, record it as `approved`, then mark it `in_progress` when implementation starts.
 6. Implement only the approved scope.
 7. Run focused tests and relevant static checks.
-8. Report:
+8. Record the validation result, mark the step `completed` or `blocked`, and report:
    - what changed;
    - observable behavior;
    - validation result;
@@ -82,16 +92,16 @@ Never silently implement a “suggested later” item.
 
 If implementation reveals a materially different requirement, stop and propose it as a new step.
 
-## Design and migration rules
+## Repository-aware design and migration rules
 
-- Keep the database migration as the production schema source of truth.
-- Use model annotations for persistence mapping, not as a substitute for migrations.
-- Use expand/backfill/contract migrations when moving existing data.
-- Preserve compatibility until the approved cleanup step.
-- Place events in the repository’s established events package.
-- Follow existing module, repository, DTO, and test conventions.
-- Prefer small interfaces that hide indexing, persistence, scoring, or synchronization complexity.
-- Keep high-frequency observations separate from content update timestamps.
+- Discover the repository's architecture, persistence, migration, event, naming, and test conventions before proposing a design.
+- Follow established conventions unless the objective requires changing them. Explain and seek approval for material deviations.
+- Use the repository's established schema-management mechanism and source of truth. Keep code-level mappings, generated schemas, and migrations consistent where applicable.
+- Choose a migration strategy from the actual data volume, deployment model, rollback needs, and compatibility constraints. Use a staged pattern such as expand/backfill/contract only when those constraints warrant it, not as a universal default.
+- Preserve backward compatibility only where consumers or deployment sequencing require it. Make later cleanup a separate approved step when appropriate.
+- Place events, interfaces, DTOs, repositories, and tests according to the repository's existing module boundaries rather than assuming a particular package layout.
+- Prefer interfaces that hide meaningful implementation complexity without adding abstractions the codebase does not need.
+- Do not overload one field with distinct domain meanings. Model timestamps and other state according to their actual semantics and the repository's conventions.
 
 ## Validation
 
@@ -105,17 +115,11 @@ After each step, run the smallest relevant checks, such as:
 
 After the final implementation step, validate the complete workflow:
 
-- creation or capture;
-- approval;
-- runtime use;
-- updates;
-- cache or index refresh;
-- usage recording;
-- deactivation and deletion;
-- fallback behavior;
-- migration consistency;
-- backend test suite;
-- frontend production build when affected;
+- the primary end-to-end behavior;
+- affected lifecycle operations, such as creation, updates, and deletion;
+- relevant failure, fallback, rollback, and compatibility behavior;
+- schema and data consistency when persistence is affected;
+- relevant test suites and production builds for affected components;
 - repository diff and whitespace checks.
 
 Do not report the integration as complete until required validation passes. Clearly report checks that could not be run.
@@ -133,7 +137,7 @@ When the user requests documentation:
    - purpose;
    - domain model;
    - lifecycle;
-   - matching or processing flow;
+   - main processing flow;
    - invariants;
    - administration;
    - endpoints;
@@ -153,7 +157,7 @@ At completion, provide a concise handoff containing:
 
 - implemented outcome;
 - important architectural behavior;
-- migrations added;
+- schema or data changes, when applicable;
 - validation performed;
 - unresolved operational caveats;
 - links to primary implementation and documentation files.
