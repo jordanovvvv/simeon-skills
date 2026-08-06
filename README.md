@@ -23,6 +23,12 @@ To install one specific skill, include its name or GitHub path:
 Use $skill-installer to install approval-gated-integration from https://github.com/jordanovvvv/simeon-skills/tree/main/skills/approval-gated-integration.
 ```
 
+For example, install Sub-Graper with:
+
+```text
+Use $skill-installer to install sub-graper from https://github.com/jordanovvvv/simeon-skills/tree/main/skills/sub-graper.
+```
+
 To install directly on Windows, pass one or more explicit skill paths to the bundled installer:
 
 ```powershell
@@ -32,7 +38,7 @@ python "$HOME\.codex\skills\.system\skill-installer\scripts\install-skill-from-g
 For multiple skills, list every path after `--path`:
 
 ```powershell
-python "$HOME\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo jordanovvvv/simeon-skills --path skills/approval-gated-integration skills/another-skill
+python "$HOME\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo jordanovvvv/simeon-skills --path skills/approval-gated-integration skills/sub-graper
 ```
 
 The command-line installer does not expand `skills/*`; keep the path list synchronized with the skill directories in the repository when installing all skills.
@@ -61,6 +67,36 @@ Use $approval-gated-integration to guide this codebase change step by step and w
 
 The skill also allows implicit invocation when a request clearly calls for approval-gated implementation.
 
+### Sub-Graper
+
+`sub-graper` delegates repository-wide code searches to one isolated subagent and caches confident file-and-line results per project. It checks the cache before searching, validates that cached files and line ranges still exist, and treats expired, weak, or invalid entries as misses.
+
+#### Use
+
+Invoke it explicitly when locating or understanding code:
+
+```text
+Use $sub-graper to find where authentication middleware is configured.
+```
+
+The skill also handles cache maintenance requests:
+
+```text
+Use $sub-graper to invalidate the cached authentication middleware result.
+Use $sub-graper to clear its cache for this project.
+```
+
+#### Cache configuration
+
+Sub-Graper stores runtime state outside its installed skill directory. It resolves the cache root in this order:
+
+1. The `--cache-dir` command option.
+2. The `SUB_GRAPER_CACHE_DIR` environment variable.
+3. `cache_dir` in the skill's `config.json`.
+4. `<project-root>/.codex/sub-graper-cache`.
+
+Entries use a 14-day TTL by default. Repository revisions do not invalidate entries automatically; users can invalidate one selected entry or clear the current project's cache when needed. The cache index uses JSONL, while resolved spans and notes are stored as Markdown entry files.
+
 ## Update or reinstall
 
 Because the installer does not overwrite existing skills, move or remove the installed directory before reinstalling. Keep a backup if the installed copy contains local changes.
@@ -70,9 +106,14 @@ Because the installer does not overwrite existing skills, move or remove the ins
 ```text
 skills/
 +-- approval-gated-integration/
+|   +-- SKILL.md
+|   +-- agents/
+|       +-- openai.yaml
++-- sub-graper/
     +-- SKILL.md
-    +-- agents/
-        +-- openai.yaml
+    +-- config.json
+    +-- scripts/
+        +-- sub_graper.py
 ```
 
 ## Validate
@@ -81,7 +122,10 @@ The validator requires [PyYAML](https://pypi.org/project/PyYAML/). Run it from a
 
 ```powershell
 python "$HOME\.codex\skills\.system\skill-creator\scripts\quick_validate.py" "skills\approval-gated-integration"
+python "$HOME\.codex\skills\.system\skill-creator\scripts\quick_validate.py" "skills\sub-graper"
 ```
+
+Sub-Graper's cache manager requires Python 3.9 or newer. Its cache lifecycle can be exercised safely by passing `--cache-dir` with a temporary directory.
 
 ## License
 
