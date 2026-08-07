@@ -4,10 +4,10 @@ Open-source Codex skills maintained by [jordanovvvv](https://github.com/jordanov
 
 ## Skills
 
-| Skill | Purpose |
-| --- | --- |
-| [`approval-gated-integration`](skills/approval-gated-integration/SKILL.md) | Implements codebase changes through small, explicitly approved and validated steps. |
-| [`sub-graper`](skills/sub-graper/SKILL.md) | Delegates code search to one subagent and caches validated results per project. |
+| Skill | Problem it addresses | What it does |
+| --- | --- | --- |
+| [`approval-gated-integration`](skills/approval-gated-integration/SKILL.md) | Large or sensitive code changes can move ahead without enough review, making scope creep and regressions harder to control. | Breaks implementation into small, explicit approval gates and validates each approved step before continuing. |
+| [`sub-graper`](skills/sub-graper/SKILL.md) | Repeated codebase searches consume the main conversation's context and duplicate previously completed discovery work. | Delegates each search to one focused subagent and caches validated file-and-line results for later queries. |
 
 ## Install
 
@@ -40,3 +40,7 @@ python "$HOME\.codex\skills\.system\skill-creator\scripts\quick_validate.py" "sk
 ## License
 
 Released under the [MIT License](LICENCE.txt).
+
+## Contributing
+
+Contributions are welcome. If you find an error, outdated instruction, validation failure, or have an idea for a new skill or improvement, please [open an issue](https://github.com/jordanovvvv/simeon-skills/issues/new) with the affected skill, reproduction steps, and the expected behavior. Pull requests are also welcome for focused fixes and improvements.
