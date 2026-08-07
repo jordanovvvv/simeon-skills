@@ -1,0 +1,62 @@
+name: Test skills
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "requirements-dev.txt"
+      - ".github/workflows/test-skills.yml"
+  pull_request:
+    paths:
+      - "skills/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "requirements-dev.txt"
+      - ".github/workflows/test-skills.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.14"
+          - os: windows-latest
+            python-version: "3.14"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Check Python syntax
+        run: python -m compileall -q skills
+
+      - name: Lint Python
+        run: python -m ruff check skills tests
+
+      - name: Run tests
+        run: python -m pytest -q
