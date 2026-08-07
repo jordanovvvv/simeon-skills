@@ -1,0 +1,6 @@
+# Documentation-only paths that do not require the Python test matrix.
+# Use repository-relative paths and shell-style glob patterns.
+README.md
+LICENCE.txt
+docs/**
+exclude-from-testing.txt
