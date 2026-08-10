@@ -21,10 +21,12 @@ question comes up it costs nothing.
 ## Core contract
 
 - Never grep/read/list_dir directly in the main conversation to answer a
-  "where/how is X implemented" question. Always route through this skill.
+  "where/how is X implemented" question. Always route through this skill —
+  except for the trivial-case bypass below.
 - Always check the project's cache before spawning a search subagent.
-- Return a cache hit only when it is fresh, matches conservatively, and every
-  referenced file and line range still exists. Otherwise treat it as a miss.
+- Return a cache hit only when it is fresh, matches conservatively, every
+  referenced file and line range still exists, and the content fingerprint
+  still matches (see "Cache validation").
 - A search is delegated to exactly **one** subagent per query. That subagent
   runs grep/read/list_dir calls in parallel within its own turns — never
   spawn multiple competing subagents for a single query.
@@ -44,6 +46,21 @@ question comes up it costs nothing.
 - A user flagging a bad result invalidates only that one cache entry, never
   the whole project cache, unless the user explicitly asks to clear it.
 
+## Trivial-case bypass
+
+Skip cache lookup and subagent delegation entirely when no actual search is
+needed:
+
+- the user already gave an exact file path (and, if relevant, line
+  numbers) rather than asking where something is;
+- the answer is already visible in the current conversation context (e.g.
+  a file already read this turn).
+
+In these cases, just answer directly. Routing a non-search through the
+cache/subagent machinery adds overhead for no benefit. Anything short of
+this — including "I think it's in the auth module, can you confirm" — still
+goes through the normal working loop.
+
 ## Working loop
 
 1. **Resolve the project key.**
@@ -55,13 +72,20 @@ question comes up it costs nothing.
 2. **Check the cache first.**
    Resolve this skill's directory from the loaded `SKILL.md`, select an
    available Python 3 runtime, and run:
+
    ```
    <python> "<skill-dir>/scripts/sub_graper.py" lookup --project-root "<resolved path>" --query "<user's question, in your own words>"
    ```
+
    - If it returns a `HIT`, answer directly from the printed entry. Do not
      spawn a subagent.
-   - If it returns `MISS` (no match, or match found but expired per TTL),
-     continue to step 3.
+   - If it returns `MISS` (no match, match expired per TTL, or match found
+     but the content fingerprint no longer matches), continue to step 3.
+   - If the command errors (script failure, corrupted cache, missing
+     Python), retry once. If it fails again, treat this as a full cache
+     outage for the current query: skip straight to step 3 as a direct,
+     uncached search, and don't attempt to write a cache entry afterward
+     unless a later lookup succeeds cleanly.
 
 3. **Delegate the search to one subagent.**
    Spawn a single search subagent (e.g. via the Task tool) with a prompt
@@ -70,16 +94,22 @@ question comes up it costs nothing.
    > Search this repository to answer: "<query>". Run grep, read, and
    > list_dir calls in parallel where possible. You have at most 4 turns.
    > Stop as soon as you have a small, confident set of file:line-range
-   > spans that answer the question. Return ONLY: (a) the resolved
-   > file:line-range spans, (b) one sentence per span on why it matches,
-   > and (c) a confidence level (confident / uncertain / not found). Do
-   > not return raw grep output, dead ends, or your search process.
+   > spans that answer the question — at most 8 spans; if more genuinely
+   > apply, return the 8 most representative and say so. Return ONLY:
+   > (a) the resolved file:line-range spans, (b) one sentence per span on
+   > why it matches, and (c) a confidence level (confident / uncertain /
+   > not found). Do not return raw grep output, dead ends, or your search
+   > process. If you reach your turn limit without a confident or
+   > not-found conclusion, return your best partial spans with confidence
+   > "uncertain" rather than continuing further.
 
 4. **Handle the subagent's result.**
    - If confidence is **confident**: write it to the cache (step 5), then
      answer the user from it.
-   - If confidence is **uncertain** or **not found**: answer the user
-     honestly, but do **not** write anything to the cache.
+   - If confidence is **uncertain** or **not found** — including the case
+     where the subagent hit its turn cap without resolving — answer the
+     user honestly, noting the search was inconclusive, but do **not**
+     write anything to the cache.
 
 5. **Write to cache (confident results only).**
    Run:
@@ -87,7 +117,8 @@ question comes up it costs nothing.
    <python> "<skill-dir>/scripts/sub_graper.py" write --project-root "<resolved path>" --query "<query>" --spans "<file:line-range spans, one per line>" --notes "<why each span matched>"
    ```
    This creates one entry file under the project's cache folder and
-   appends one JSON object to that project's `index.jsonl`. The command
+   appends one JSON object to that project's `index.jsonl`, including a
+   content fingerprint (see "Cache validation") for each span. The command
    refuses to cache missing files, malformed spans, or invalid line ranges.
 
 ## Handling corrections
@@ -95,10 +126,21 @@ question comes up it costs nothing.
 If the user says a returned result was wrong or outdated:
 
 ```
-<python> "<skill-dir>/scripts/sub_graper.py" invalidate --project-root "<resolved path>" --entry "<entry slug or query text>"
+<python> "<skill-dir>/scripts/sub_graper.py" invalidate --project-root "<resolved path>" --entry "<entry slug or exact query text>"
 ```
 
-This removes only that one entry. Only run a full wipe —
+Matching for invalidation is exact, not fuzzy — it matches an exact entry
+slug or the exact original query text, not a token-overlap approximation
+like lookup uses. If the given text doesn't exactly match a single entry:
+
+- **no match** — report that nothing matched and ask the user to confirm
+  the query or slug (e.g. by listing recent entries for the project);
+- **multiple matches** — list the candidate entries (query text and
+  spans) and ask the user which one to invalidate before removing anything.
+
+Never guess and invalidate the "closest" entry.
+
+Only run a full wipe —
 
 ```
 <python> "<skill-dir>/scripts/sub_graper.py" clear --project-root "<resolved path>"
@@ -106,16 +148,25 @@ This removes only that one entry. Only run a full wipe —
 
 — if the user explicitly asks to clear the whole project's cache.
 
-## Matching heuristic
+## Cache validation
 
-Cache lookups use conservative keyword overlap between the new query and
-each cached entry's query text. Non-identical queries must share at least
-two meaningful tokens and meet the configured similarity threshold. Treat
-weak matches as misses rather than risk returning unrelated code.
+Before returning a hit, a cached entry must pass all of the following, in
+order. A failed check at any point is a miss:
 
-Before returning a hit, verify that every cached span uses `path:start-end`
-format, remains inside the project root, references an existing file, and
-does not exceed the file's current line count. A failed check is a miss.
+1. **Freshness** — the entry is within `ttl_days` of its creation date.
+2. **Query match** — conservative keyword overlap between the new query and
+   the cached entry's query text. Non-identical queries must share at
+   least two meaningful tokens and meet `similarity_threshold` from
+   `config.json`. Treat weak matches as misses rather than risk returning
+   unrelated code.
+3. **Structural validity** — every cached span uses `path:start-end`
+   format, remains inside the project root, references an existing file,
+   and does not exceed the file's current line count.
+4. **Content fingerprint** — the cached entry stores a hash of each span's
+   text at write time. On lookup, re-read the span at its recorded line
+   range and recompute the hash. If it doesn't match, the underlying code
+   has changed since caching (even if the line range still looks valid in
+   isolation) — treat as a miss.
 
 ## Configuration
 
@@ -124,21 +175,24 @@ does not exceed the file's current line count. A failed check is a miss.
 ```json
 {
   "ttl_days": 14,
-  "cache_dir": null
+  "cache_dir": null,
+  "similarity_threshold": 0.6
 }
 ```
 
 Change `ttl_days` to adjust how long results remain fresh. Set `cache_dir`
-to an absolute path or a path relative to the project root. Prefer the
-`SUB_GRAPER_CACHE_DIR` environment variable for a user-level override and
-`--cache-dir` for a one-command override.
+to an absolute path or a path relative to the project root. Set
+`similarity_threshold` to control how strict query matching is (higher =
+stricter; used alongside the two-shared-token minimum in "Cache
+validation"). Prefer the `SUB_GRAPER_CACHE_DIR` environment variable for a
+user-level override and `--cache-dir` for a one-command override.
 
 ## File layout this skill creates
 
 ```
 <cache-root>/
   <project-key-hash>-<project-basename>/
-    index.jsonl             (one JSON object per entry)
+    index.jsonl             (one JSON object per entry, incl. span fingerprints)
     entries/
       <query-slug>.md       (query, spans, notes, created date)
 ```
@@ -148,7 +202,12 @@ to an absolute path or a path relative to the project root. Prefer the
 - Do not spawn more than one subagent per query — that duplicates context
   setup cost for no benefit over parallel tool calls within one subagent.
 - Do not cache a result you are not confident in.
-- Do not return a cached entry whose files or line ranges fail validation.
+- Do not return a cached entry whose files, line ranges, or content
+  fingerprints fail validation.
 - Do not key the cache by a project name from an external tool's UI —
   those are not stable or reliably readable.
 - Do not silently drop the whole project cache on a single bad result.
+- Do not invalidate an entry on a fuzzy or ambiguous match — require an
+  exact match or ask the user to disambiguate.
+- Do not route a trivial, no-search-needed case through cache lookup or
+  subagent delegation.

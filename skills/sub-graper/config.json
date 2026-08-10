@@ -1,4 +1,5 @@
 {
   "ttl_days": 14,
-  "cache_dir": null
+  "cache_dir": null,
+  "similarity_threshold": 0.6
 }
