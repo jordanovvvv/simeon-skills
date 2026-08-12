@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shape Project"
+  short_description: "Build new projects through approved, purpose-driven stages"
+  default_prompt: "Use $shape-project to turn my project motive into a clarified, approved architecture and incrementally implemented codebase."
