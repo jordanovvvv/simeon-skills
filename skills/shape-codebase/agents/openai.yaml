@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shape Codebase"
+  short_description: "Review and reshape existing code through approved stages"
+  default_prompt: "Use $shape-codebase to review this repository, recommend a target design, and apply approved improvements incrementally."

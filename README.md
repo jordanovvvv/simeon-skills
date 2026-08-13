@@ -7,6 +7,7 @@ Open-source Codex skills maintained by [jordanovvvv](https://github.com/jordanov
 | Skill | Problem it addresses | What it does |
 | --- | --- | --- |
 | [`approval-gated-integration`](skills/approval-gated-integration/SKILL.md) | Large or sensitive code changes can move ahead without enough review, making scope creep and regressions harder to control. | Breaks implementation into small, explicit approval gates and validates each approved step before continuing. |
+| [`shape-codebase`](skills/shape-codebase/SKILL.md) | Existing codebases can accumulate unclear ownership, shallow abstractions, risky dependencies, and unprioritized cleanup without an evidence-backed improvement path. | Maps the repository, verifies and prioritizes findings, designs a target architecture, and applies approved remediation slices with focused validation. |
 | [`shape-project`](skills/shape-project/SKILL.md) | New project ideas can turn into code before their purpose, requirements, architecture, and file ownership are clear. | Clarifies the motive, gains approval at every material stage, designs an explicit structure, and coordinates validated implementation slices. |
 | [`sub-graper`](skills/sub-graper/SKILL.md) | Repeated codebase searches consume the main conversation's context and duplicate previously completed discovery work. | Delegates each search to one focused subagent and caches validated file-and-line results for later queries. |
 
