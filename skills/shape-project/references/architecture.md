@@ -113,7 +113,9 @@ Before requesting approval to scaffold, provide:
 - authored versus generated files;
 - configuration and dependency list;
 - documentation plan;
-- initial validation commands;
+- commands that may create or modify files, install dependencies, update lock
+  files, generate artifacts, or otherwise mutate state;
+- initial read-only and write-capable validation commands, clearly separated;
 - external side effects requiring separate authorization;
 - important trade-offs and deliberately deferred work.
 

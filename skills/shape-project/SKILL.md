@@ -1,6 +1,6 @@
 ---
 name: shape-project
-description: Create new software projects from a user-defined motive through clarification, domain modeling, architecture design, approval-gated scaffolding, delegated implementation, validation, and minimal documentation. Use when the user wants to start a codebase from scratch, turn an application idea into an explicit structure, or build a new project step by step with approval before every material stage.
+description: Create new software projects from a user-defined motive through clarification, domain modeling, architecture design, approval-gated scaffolding, delegated implementation, validation, and minimal documentation. Use when the user wants to start a codebase from scratch, turn an application idea into an explicit structure, or build a new project step by step with explicit approval before any repository or external-state change.
 ---
 
 # Shape Project
@@ -19,8 +19,18 @@ independent agents where they materially improve discovery, design, or delivery.
   validation, and status.
 - Use these statuses: `proposed`, `approved`, `in_progress`, `completed`,
   `blocked`, and `skipped`.
-- Require explicit approval before entering every material stage. Treat
-  questions and requested revisions as discussion, not approval.
+- Require explicit approval before executing every stage's proposed output and
+  before making any change. Treat questions and requested revisions as
+  discussion, not approval.
+- Keep discovery, requirements, technology selection, domain modeling,
+  architecture design, and delivery planning strictly read-only. Approval of
+  those stages does not authorize files, dependencies, generated artifacts, or
+  external state to be changed.
+- Before changing anything, present either the complete `SP-6` foundation
+  package or a named `SP-8.n` implementation slice, including its behavioral
+  scope, affected artifacts, dependencies, write-capable commands, external
+  effects, risks, exclusions, and validation. Yield and wait for explicit user
+  approval of that package or slice.
 - Perform only the approved stage. Do not bundle optional features or future
   improvements into it.
 - Present the complete proposed directory tree and placement rationale before
@@ -34,9 +44,13 @@ independent agents where they materially improve discovery, design, or delivery.
 - Keep documentation small, current, and navigable. Do not create speculative
   documentation or empty directory scaffolds.
 
-Clarification and read-only investigation inside the current stage do not need
-separate approval. Approval applies to the stage's described outcome, not to
-each question, tool call, or file edit.
+Clarification and read-only investigation inside an approved stage do not need
+separate approval. Before approval of `SP-6` or a named `SP-8.n` slice, do not
+create, edit, delete, move, rename, format, or generate files; install or update
+dependencies; update snapshots or lock files; run migrations or fix-mode tools;
+or mutate databases, remote systems, repository state, or other external state.
+After approval, individual edits inside the disclosed scope do not need separate
+approval.
 
 ## Load supporting guidance
 
@@ -71,12 +85,27 @@ Skip a stage only when it is genuinely irrelevant and record why. Do not treat
 silence, earlier approval of another stage, or approval of the overall idea as
 approval of a later stage.
 
+Treat broad instructions such as "build it" or "implement everything" as intent
+to continue the staged workflow, not approval of packages or slices whose full
+scope has not been presented. If several complete proposals are pending and the
+user gives ambiguous approval, ask which proposal they approve before changing
+anything.
+
+One explicit approval of a complete `SP-6` package or named `SP-8.n` slice
+satisfies both the stage and change gate; do not request duplicate approval.
+Treat a response such as "yes," "do it," or "proceed" as approval only when
+exactly one complete proposal is pending and the response clearly answers it.
+For several pending proposals, require the user to name or explicitly approve
+the intended package or slices.
+
 ## Stage protocol
 
 For each stage:
 
-1. Reconcile the ledger with confirmed decisions and existing artifacts.
-2. Ask focused questions until the stage's exit criteria are satisfied.
+1. In a read-only proposal phase, reconcile the ledger with confirmed decisions
+   and existing artifacts.
+2. Ask focused questions and prepare the proposed output without changing
+   repository or external state.
 3. Separate confirmed facts, recommendations, assumptions, and unresolved
    decisions.
 4. Present the proposed output, affected artifacts, validation, risks, and
@@ -89,9 +118,21 @@ For each stage:
 9. Report the result and mark the stage `completed`, `blocked`, or `skipped`.
 10. Propose the next stage and wait again.
 
+Steps 1 through 5 prepare and present a proposal; they do not execute the stage
+and require no approval beyond any already-approved read-only investigation
+they rely on. Approval moves the stage from proposal into execution. This keeps
+the user able to inspect the full package before deciding whether it may run.
+
 If implementation reveals a materially different requirement or architectural
 need, stop the current slice and propose a revision or a new stage. Do not hide
 the change inside already-approved work.
+
+For `SP-1` through `SP-5` and `SP-7`, "perform only the approved scope" means
+read-only clarification, analysis, design, and planning. Only an explicitly
+approved `SP-6` foundation package or `SP-8.n` implementation slice authorizes
+changes, and only within its disclosed scope. If implementation or validation
+requires an undisclosed change or side effect, stop and request revised or new
+approval before performing it.
 
 ## SP-1 through SP-4: discover the project
 
@@ -134,8 +175,10 @@ After approval:
   approved foundation.
 - Report generated files separately from authored files.
 
-Do not initialize external services, deploy, publish, push, or create remote
-resources unless the user explicitly approves those effects.
+Do not run a generator, installer, formatter, migration, or validation command
+that can write outside the disclosed foundation package. Do not initialize
+external services, deploy, publish, push, or create remote resources unless the
+user explicitly approves those effects in the package.
 
 ## SP-7 and SP-8.n: plan and implement vertical slices
 
@@ -152,6 +195,11 @@ For each slice, state:
 - focused validation;
 - integration and documentation impact;
 - risks and excluded optional work.
+
+`SP-7` approval authorizes only the read-only delivery plan. Present each
+`SP-8.n` slice completely and wait for its explicit approval before writing.
+The user may approve several named, fully presented slices together; implement
+them in dependency order and validate each separately.
 
 Use [references/delegation.md](references/delegation.md) when a slice contains
 independent work. After integrating worker results, inspect the actual diff and

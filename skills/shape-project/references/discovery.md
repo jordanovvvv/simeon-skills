@@ -5,6 +5,10 @@ questions at a time. Explain why an answer matters when the consequence is not
 obvious, and recommend a default when the user is unlikely to have a useful
 preference.
 
+Keep these stages strictly read-only. Do not create or update project files,
+dependencies, generated artifacts, repository state, or external systems while
+capturing motive, requirements, technology decisions, or domain language.
+
 ## Question discipline
 
 - Distinguish product decisions from technical decisions.

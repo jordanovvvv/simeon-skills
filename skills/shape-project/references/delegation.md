@@ -72,13 +72,20 @@ asking for alternative designs or independent validation.
 
 ## Writing protocol
 
-- Do not begin worker writes before the containing stage or slice is approved.
+- Do not begin worker writes before the complete `SP-6` package or named
+  `SP-8.n` slice containing those writes is explicitly approved. Approval of
+  discovery, architecture, or delivery planning never authorizes worker writes.
 - Assign disjoint paths before launching concurrent writers.
 - Require workers to preserve unrelated changes.
 - Stop a worker that discovers a need to cross its ownership boundary.
 - Route shared contract changes back to the coordinator for a new proposal.
 - Make the coordinator responsible for shared configuration, dependency locks,
   indexes, and final documentation reconciliation.
+
+Disclose write-capable worker commands, including dependency installation,
+generation, formatting, snapshot updates, migrations, and fix modes, in the
+approved package or slice. If a worker discovers a required write or external
+effect outside that scope, stop the worker and request revised approval.
 
 Workers must return changed paths, observable behavior, validation results,
 assumptions, and concerns. A worker may not declare the full slice complete.
