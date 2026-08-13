@@ -13,8 +13,15 @@ Open-source Codex skills maintained by [jordanovvvv](https://github.com/jordanov
 
 ## Install
 
-Install every skill globally for Codex with the
-[`skills` CLI](https://github.com/vercel-labs/skills):
+Use the interactive [`skills` CLI](https://github.com/vercel-labs/skills) to
+choose which skills to install, which coding agents should receive them, and
+whether to install them for the current project or globally:
+
+```powershell
+npx skills@latest add jordanovvvv/simeon-skills
+```
+
+To install every skill globally for Codex without prompts:
 
 ```powershell
 npx skills@latest add jordanovvvv/simeon-skills --skill '*' --agent codex --global --yes
