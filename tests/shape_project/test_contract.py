@@ -56,7 +56,21 @@ def test_core_approval_and_ownership_contracts_are_explicit():
     content = read_skill()
     normalized_content = " ".join(content.split())
 
-    assert "Require explicit approval before entering every material stage" in content
+    assert (
+        "Require explicit approval before executing every stage's proposed output "
+        "and before making any change."
+        in normalized_content
+    )
+    assert (
+        "Before changing anything, present either the complete `SP-6` foundation "
+        "package or a named `SP-8.n` implementation slice"
+        in normalized_content
+    )
+    assert (
+        "One explicit approval of a complete `SP-6` package or named `SP-8.n` "
+        "slice satisfies both the stage and change gate"
+        in normalized_content
+    )
     assert "Give concurrent writing agents disjoint file ownership" in content
     assert (
         "Never accept a worker's success claim as validation evidence by itself"
