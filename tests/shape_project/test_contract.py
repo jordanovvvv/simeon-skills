@@ -36,6 +36,9 @@ def test_local_markdown_references_resolve_inside_skill():
 
 def test_workflow_stages_are_defined_in_order():
     content = read_skill()
+    stage_table = content.split("Use these stable stages:", maxsplit=1)[1].split(
+        "Skip a stage", maxsplit=1
+    )[0]
     expected_stages = [
         "`SP-1`",
         "`SP-2`",
@@ -47,7 +50,7 @@ def test_workflow_stages_are_defined_in_order():
         "`SP-8.n`",
         "`SP-9`",
     ]
-    positions = [content.index(stage) for stage in expected_stages]
+    positions = [stage_table.index(stage) for stage in expected_stages]
 
     assert positions == sorted(positions)
 
