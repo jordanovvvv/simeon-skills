@@ -13,23 +13,46 @@ Open-source Codex skills maintained by [jordanovvvv](https://github.com/jordanov
 
 ## Install
 
-Ask Codex to install every skill:
+Install every skill globally for Codex with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
 
-```text
-Use $skill-installer to install all skills from https://github.com/jordanovvvv/simeon-skills.
+```powershell
+npx skills@latest add jordanovvvv/simeon-skills --skill '*' --agent codex --global --yes
 ```
 
-Or install one skill:
+Install one skill by name:
 
-```text
-Use $skill-installer to install <skill-name> from https://github.com/jordanovvvv/simeon-skills/tree/main/skills/<skill-name>.
+```powershell
+npx skills@latest add jordanovvvv/simeon-skills --skill <skill-name> --agent codex --global --yes
 ```
 
-Skills are installed under `~/.codex/skills` and become available on the next turn.
+Global Codex skills are installed under `~/.codex/skills` and become available
+on the next turn.
 
 ## Update
 
-This repository is the source of truth. The installer does not overwrite an existing skill, so move or remove its installed directory before reinstalling it.
+Update every installed global skill without deleting and reinstalling it:
+
+```powershell
+npx skills@latest update --global
+```
+
+Or update one skill:
+
+```powershell
+npx skills@latest update --global <skill-name>
+```
+
+Updates refresh skills already tracked by the installer. To discover skills
+added to this repository later, rerun the install-all command. If a skill is
+renamed or removed upstream, remove its old installed name explicitly:
+
+```powershell
+npx skills@latest remove --global <old-skill-name>
+```
+
+This repository remains the source of truth; local edits to installed copies
+may be overwritten during an update.
 
 ## Validate
 
