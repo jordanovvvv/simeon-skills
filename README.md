@@ -24,7 +24,7 @@ npx skills@latest add jordanovvvv/simeon-skills
 To install every skill globally for Codex without prompts:
 
 ```powershell
-npx skills@latest add jordanovvvv/simeon-skills --skill '*' --agent codex --global --yes
+npx skills@latest add jordanovvvv/simeon-skills --skill --agent codex --global --yes
 ```
 
 Install one skill by name:
