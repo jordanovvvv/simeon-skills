@@ -44,6 +44,11 @@ Update every installed global skill without deleting and reinstalling it:
 npx skills@latest update --global
 ```
 
+Update latest changes and pick globally, projects and all:
+```powershell
+npx skills update
+```
+
 Or update one skill:
 
 ```powershell
