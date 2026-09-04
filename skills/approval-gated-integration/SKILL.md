@@ -16,7 +16,7 @@ Guide the user through incremental implementation while keeping them in control 
 - Apply only the approved step or explicitly approved group of steps.
 - Do not include optional improvements inside an approved step without authorization.
 - Run focused validation after every implemented step.
-- Run complete integration validation after the final implementation step.
+- Run full integration validation, production builds, and full test suites only when the user explicitly requests them, after the final implementation step.
 - Preserve unrelated user changes.
 
 Do not request approval for read-only inspection, analysis, or validation within the approved scope.
@@ -25,24 +25,24 @@ Do not require approval for every individual file edit inside an approved step. 
 
 ## Step granularity
 
-Default to one architectural layer per step (e.g. schema, then service, then API), unless those layers are tightly coupled and cannot be independently verified — in that case, combine them into a single step and say so explicitly in the proposal. A step should always be independently revertable and independently testable; if a step can't be validated on its own, it's sized wrong and should be split or merged.
+Use the smallest coherent behavioral scope that can be independently verified. A step may span architectural layers when they are tightly coupled; explain that choice in the proposal. Do not split a step solely by file or layer when doing so adds approval overhead without improving verification or reversibility.
 
 ## Progress tracking
 
-Maintain a progress ledger from the first proposal through completion. Give every step a stable ID and record its scope, status, validation, and result. Use these statuses consistently: `proposed`, `approved`, `in_progress`, `completed`, `blocked`, and `skipped`.
+Maintain a progress ledger from the first proposal through completion. Give every step a stable ID and record its scope, status, validation, and result. Update it only at meaningful state transitions, not for individual edits. Use these statuses consistently: `proposed`, `approved`, `in_progress`, `completed`, `blocked`, and `skipped`.
 
 - Use the task's built-in plan or checklist as the default ledger when one is available.
 - **Default fallback:** when no built-in ledger and no repository issue/PR tracking system exists, maintain the ledger in-conversation. This requires no approval — it's the default, not an escalation.
 - Only propose a durable repository artifact (issue, PR description, planning doc) — and get approval before creating or modifying it — when the work explicitly needs to survive across sessions or beyond this conversation.
 - Do not add an ad hoc tracking file to the repository by default.
-- Update the ledger when proposing or revising a step, receiving approval, starting implementation, and completing validation.
+- Update the ledger when proposing or revising a step, receiving approval, starting implementation, and completing validation; do not update it for individual file edits.
 - When resuming interrupted work, reconcile the ledger with the codebase and latest validation evidence before continuing. Do not treat an unrecorded step as approved.
 
 ## Working loop
 
 Repeat this loop until the objective is complete:
 
-1. Inspect the current implementation and relevant tests, then reconcile the progress ledger.
+1. At the start of each meaningful step, inspect the current implementation and relevant tests, then reconcile the progress ledger. Re-inspect only when beginning the next meaningful step or when new evidence requires it.
 2. Add or update the next `proposed` step in the ledger and describe it:
    - objective;
    - behavioral changes;
@@ -93,9 +93,11 @@ When the user asks a question about the proposed step:
 
 If the user rejects or modifies a proposal, update the plan without applying the rejected behavior.
 
+Do not reopen settled tradeoffs unless new evidence reveals a material requirement.
+
 ## Suggested changes
 
-At each approval boundary, distinguish:
+When relevant at an approval boundary, distinguish:
 
 - **Required now** — necessary to achieve the stated objective safely.
 - **Suggested later** — useful improvements outside the current approved scope.
@@ -103,9 +105,11 @@ At each approval boundary, distinguish:
 
 Never silently implement a "suggested later" item.
 
+Do not repeatedly re-propose an unchanged "suggested later" item.
+
 If implementation reveals a materially different requirement, stop and propose it as a new step.
 
-**Dependencies discovered mid-implementation.** If implementing an approved step turns out to require touching something outside the approved scope (e.g. adding a column turns out to require an unapproved migration file), stop immediately. Do not implement the dependency. Mark the current step `blocked`, explain what was discovered and why it's out of scope, and propose the dependency as a new step for approval.
+**Dependencies discovered mid-implementation.** Treat files and routine implementation details needed to deliver the approved behavioral scope as in scope. If implementation reveals a dependency that adds new behavior, creates material risk, or otherwise changes that scope, stop, mark the current step `blocked`, explain the dependency, and propose it as a new step for approval.
 
 ## Repository-aware design and migration rules
 
@@ -128,9 +132,9 @@ After each step, run the smallest relevant checks, such as:
 - linting;
 - type checking.
 
-**On validation failure.** If a focused check fails partway through an approved step, do not attempt a fix unilaterally. Mark the step `blocked`, report the failure to the user, and ask whether the fix should be treated as part of the current step (same approval, continue) or proposed as a new step. Proceed only once the user has indicated which.
+**On validation failure.** If a focused check fails partway through an approved step, investigate and fix it when the fix remains within the approved behavioral scope. Mark the step `blocked` and propose a new step only when the fix adds new behavior, changes a settled tradeoff, or creates material risk.
 
-After the final implementation step, validate the complete workflow:
+When the user explicitly requests full integration validation, run it after the final implementation step. It may include:
 
 - the primary end-to-end behavior;
 - affected lifecycle operations, such as creation, updates, and deletion;
@@ -139,7 +143,7 @@ After the final implementation step, validate the complete workflow:
 - relevant test suites and production builds for affected components;
 - repository diff and whitespace checks.
 
-Do not report the integration as complete until required validation passes. Clearly report checks that could not be run.
+Do not report requested full integration validation as complete until its required checks pass. Clearly report checks that were not run because they were not requested or could not be run.
 
 ## Documentation
 

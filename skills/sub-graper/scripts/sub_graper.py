@@ -329,18 +329,20 @@ def cmd_invalidate(args):
         print("NOTHING TO INVALIDATE (no cache for this project)")
         return
 
-    target = next((entry for entry in entries if entry["slug"] == args.entry), None)
-    if target is None:
-        matches = [
-            (match_score(args.entry, entry["query"]), entry) for entry in entries
-        ]
-        matches = [item for item in matches if item[0] >= MATCH_THRESHOLD]
-        if matches:
-            target = max(matches, key=lambda item: item[0])[1]
-
-    if target is None:
+    matches = [
+        entry for entry in entries
+        if entry["slug"] == args.entry or entry["query"] == args.entry
+    ]
+    if not matches:
         print(f"NO MATCH for '{args.entry}', nothing invalidated")
         return
+    if len(matches) > 1:
+        print(f"AMBIGUOUS MATCH for '{args.entry}', nothing invalidated")
+        for entry in matches:
+            print(f"CANDIDATE {entry['slug']}: {entry['query']}")
+        return
+
+    target = matches[0]
 
     remaining = [entry for entry in entries if entry["slug"] != target["slug"]]
     write_index_entries(args.project_root, cache_root, remaining)

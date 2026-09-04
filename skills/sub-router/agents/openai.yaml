@@ -1,0 +1,7 @@
+interface:
+  display_name: "Sub-Router"
+  short_description: "Route work to worthwhile subagents"
+  default_prompt: "Use $sub-router to decide whether a subagent should handle this task."
+
+policy:
+  allow_implicit_invocation: true
