@@ -58,6 +58,10 @@ the final decision.
 
 - Route broad or ambiguous code-location and implementation-flow questions to
   `sub-graper`.
+- `sub-router` may invoke `sub-graper` itself when the decision rule supports
+  isolated code search. When the user explicitly asks for `sub-graper`, invoke
+  it with the minimal delegation contract rather than requiring a separate
+  routing request.
 - Route work to another specialist only when that skill or agent is available
   and its narrower context materially improves the outcome.
 - Use parallel delegates only for independent questions; otherwise use one
