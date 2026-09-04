@@ -17,6 +17,9 @@ isolation, parallel exploration, or specialized context saves more work than
 the setup and handoff cost. `sub-graper` is its code-search specialist, not a
 general-purpose delegation entry point.
 
+For concise usage guidance and ready-to-use prompts, see
+[INSTRUCTION.md](INSTRUCTION.md).
+
 ## Install
 
 Use the interactive [`skills` CLI](https://github.com/vercel-labs/skills) to
