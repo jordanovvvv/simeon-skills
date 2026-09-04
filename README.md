@@ -9,7 +9,13 @@ Open-source Codex skills maintained by [jordanovvvv](https://github.com/jordanov
 | [`approval-gated-integration`](skills/approval-gated-integration/SKILL.md) | Large or sensitive code changes can move ahead without enough review, making scope creep and regressions harder to control. | Breaks implementation into small, explicit approval gates and validates each approved step before continuing. |
 | [`shape-codebase`](skills/shape-codebase/SKILL.md) | Existing codebases can accumulate unclear ownership, shallow abstractions, risky dependencies, and unprioritized cleanup without an evidence-backed improvement path. | Maps the repository, verifies and prioritizes findings, designs a target architecture, and applies approved remediation slices with focused validation. |
 | [`shape-project`](skills/shape-project/SKILL.md) | New project ideas can turn into code before their purpose, requirements, architecture, and file ownership are clear. | Clarifies the motive, gains approval at every material stage, designs an explicit structure, and coordinates validated implementation slices. |
-| [`sub-graper`](skills/sub-graper/SKILL.md) | Repeated codebase searches consume the main conversation's context and duplicate previously completed discovery work. | Delegates each search to one focused subagent and caches validated file-and-line results for later queries. |
+| [`sub-router`](skills/sub-router/SKILL.md) | Subagent setup and handoff can cost more than a task saves when delegation is automatic. | Decides whether to work directly or delegate, selects a specialist, and supplies a minimal bounded task contract. |
+| [`sub-graper`](skills/sub-graper/SKILL.md) | Broad or uncertain code discovery can create search noise and unnecessary repeated exploration. | Performs a bounded isolated code search only after `sub-router` selects it, with optional reuse caching for recurring questions. |
+
+`sub-router` is the delegation decision point. It uses a subagent only when
+isolation, parallel exploration, or specialized context saves more work than
+the setup and handoff cost. `sub-graper` is its code-search specialist, not a
+general-purpose delegation entry point.
 
 ## Install
 

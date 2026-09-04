@@ -1,7 +1,7 @@
 interface:
   display_name: "Sub-Graper"
-  short_description: "Delegate and cache codebase searches"
-  default_prompt: "Use $sub-graper to locate and explain code while keeping search noise out of the main context."
+  short_description: "Run bounded delegated code searches"
+  default_prompt: "Use $sub-graper after $sub-router selects an isolated code search."
 
 policy:
   allow_implicit_invocation: false

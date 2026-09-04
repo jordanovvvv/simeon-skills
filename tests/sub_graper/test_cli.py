@@ -127,3 +127,56 @@ def test_write_refuses_invalid_span_without_creating_cache(tmp_path):
     assert result.returncode != 0
     assert "REFUSED TO CACHE" in result.stderr
     assert not cache_root.exists()
+
+
+def test_invalidate_requires_an_exact_slug_or_query(tmp_path):
+    project_root = tmp_path / "project"
+    cache_root = tmp_path / "cache"
+    project_root.mkdir()
+    source_file = project_root / "handler.py"
+    source_file.write_text("def handle_request():\n", encoding="utf-8")
+    query = "find request handler"
+    common_arguments = (
+        "--project-root",
+        project_root,
+        "--cache-dir",
+        cache_root,
+    )
+
+    write_result = run_cli(
+        "write",
+        *common_arguments,
+        "--query",
+        query,
+        "--spans",
+        "handler.py:1",
+        "--notes",
+        "The request handler implementation.",
+    )
+    assert write_result.returncode == 0, write_result.stderr
+
+    fuzzy_invalidate = run_cli(
+        "invalidate",
+        *common_arguments,
+        "--entry",
+        "request handler",
+    )
+    assert fuzzy_invalidate.returncode == 0, fuzzy_invalidate.stderr
+    assert "NO MATCH" in fuzzy_invalidate.stdout
+
+    lookup_after_fuzzy_invalidate = run_cli(
+        "lookup",
+        *common_arguments,
+        "--query",
+        query,
+    )
+    assert "HIT" in lookup_after_fuzzy_invalidate.stdout
+
+    exact_invalidate = run_cli(
+        "invalidate",
+        *common_arguments,
+        "--entry",
+        query,
+    )
+    assert exact_invalidate.returncode == 0, exact_invalidate.stderr
+    assert "INVALIDATED find-request-handler" in exact_invalidate.stdout
